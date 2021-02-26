@@ -1,0 +1,11 @@
+{
+    "name": "weebdatahoarder/radio-ircbot",
+    "type": "project",
+    "require": {
+        "php" : ">=7.0",
+        "orpheusnet/logchecker": "^0.9.7",
+        "ext-pgsql": "*",
+        "ext-json": "*",
+        "ext-curl": "*"
+    }
+}
