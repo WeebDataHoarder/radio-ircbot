@@ -30,18 +30,15 @@ class IRCClient{
         }
         $connect .= "NICK ".$this->nickname."\r\n";
         //$connect .= "USER ".$this->nickname." example.com example.com :".$this->nickname."\r\n";
-        $connect .= "USER ".$this->nickname." 0 * :".$this->nickname."\r\n";
+        $connect .= "USER ".BOT_USER." 0 * :".BOT_USER."\r\n";
         fwrite($this->socket, $connect);
         $host = "";
         $lastCheck = 0;
         $lastPlaying = 0;
         while(true){
             $line = fgets($this->socket);
-            if($line != ""){
-                if(trim($line) == ""){
-                    continue;
-                }
-                $this->log("[RAW] " . trim($line) . " :::: " . bin2hex($line));
+            if($line != "" and trim($line) != ""){
+                $this->log("[RAW] " . trim($line));
                 $line = explode(" ", $line);
                 $cmd = array_shift($line);
                 $sender = "";
@@ -68,7 +65,6 @@ class IRCClient{
                                 echo "<$sender!$senderCloak:$msg> * joined\n";
                                 handleNewJoin($sender, $senderCloak, $msg);
                             }
-                            //$this->notification(":$sender joined $msg", 1);
                         }
                         break;
                     case "332": //Topic
@@ -94,7 +90,13 @@ class IRCClient{
                     case "NOTICE":
                         break;
                     case "PRIVMSG":
-                        if(preg_match("/^([^ ]+) (\x01:ACTION |:|)(.+)$/iu", $msg, $matches) > 0){
+                        if(preg_match("/^([^ ]+) :\x01(.+)\x01/iu", $msg, $matches) > 0){ //CTCP
+                            $target = $matches[1];
+                            $msg = $matches[2];
+
+                            echo "<CTCP $sender!$senderCloak:$target> $msg\n";
+                            handleNewCTCP($sender, $senderCloak, $target, trim($msg, "\x01\r\n"));
+                        }else if(preg_match("/^([^ ]+) (\x01:ACTION |:|)(.+)$/iu", $msg, $matches) > 0){
                             $target = $matches[1];
                             $type = $matches[2];
                             $msg = $matches[3];
@@ -104,32 +106,34 @@ class IRCClient{
 
                             if($target === $this->nickname){
                                 //TODO
-                                //$this->notification(Utils::writeShort(strlen($sender)).$sender.$mes, 2);
                             }
                         }
                         break;
                     default:
                         break;
                 }
-                if($this->status === 1){
-                    sleep(1);
-                    foreach($this->cmd as $cmd){
-                        if($cmd === ""){
-                            sleep(1);
-                            continue;
-                        }
-                        echo "[RAWOUT] $cmd\n";
-                        fwrite($this->socket, $cmd."\r\n");
-                        usleep(50000);
+            }
+            if($this->status >= 1 and $this->status < 500){
+                ++$this->status;
+            }
+            if($this->status === 500){
+                sleep(1);
+                foreach($this->cmd as $cmd){
+                    if($cmd === ""){
+                        sleep(1);
+                        continue;
                     }
-                    $this->status = 2;
+                    echo "[RAWOUT] $cmd\n";
+                    fwrite($this->socket, $cmd."\r\n");
+                    usleep(50000);
                 }
+                $this->status = 501;
             }
             usleep(10000);
             if(feof($this->socket) or !$this->socket){
                 exit();
             }
-            if($this->status === 2 and $lastCheck <= (time() - 5)){
+            if($this->status === 501 and $lastCheck <= (time() - 5)){
                 $lastCheck = time();
                 global $db;
                 $np = $db->getNowPlaying();

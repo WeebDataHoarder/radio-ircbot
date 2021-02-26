@@ -15,6 +15,7 @@ const PERMISSION_MOD = 3;
 const PERMISSION_PUSER = 2;
 const PERMISSION_USER = 1;
 const PERMISSION_NONE = 0;
+const DEFAULT_PERMISSION = PERMISSION_NONE;
 
 const FORMAT_COLOR_GREEN = "\x0303";
 const FORMAT_COLOR_RED = "\x0304";
@@ -26,15 +27,15 @@ const FORMAT_ITALIC = "\x1D";
 const FORMAT_UNDERLINE = "\x1F";
 const FORMAT_RESET = "\x0F";
 
-const AUTH_ERROR_MESSAGE = !BOT_USE_SATSUKI ? "You are not identified, please identify via Services and ".BOT_USER.", .associate if needed" : "You are not identified, please identify via Satsuki / ".BOT_USER." and .associate if needed";
+const AUTH_ERROR_MESSAGE = !BOT_USE_SATSUKI ? "You are not identified, please identify via Services and ".BOT_NICK.", .associate if needed" : "You are not identified, please identify via Satsuki / ".BOT_NICK." and .associate if needed";
 
 $dessLimiter = [
 
 ];
 
-function sendIRCMessage($message, $to){
+function sendIRCMessage($message, $to, $notice = false){
     global $socket;
-    $cmd = "PRIVMSG";
+    $cmd = $notice ? "NOTICE" : "PRIVMSG";
     if($to === BOT_RADIO_CHANNEL){
         //$cmd = "CPRIVMSG";
     }
@@ -216,6 +217,19 @@ function handleNewJoin($sender, $senderCloak, $channel){
     global $torrentIndex, $lastResult, $db;
 }
 
+function handleNewCTCP($sender, $senderCloak, $to, $message){
+    if($to === BOT_NICK or $to === TEMP_NICK){
+        $answer = $sender;
+    }else{
+        $answer = $to;
+    }
+
+    switch ($message){
+        case "VERSION":
+            sendIRCMessage("\x01" . BOT_NICK." version " . substr(trim(file_get_contents(".version")), 0, 8) . "\x01", $answer, true);
+            break;
+    }
+}
 function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = false){
     global $torrentIndex, $lastResult, $db;
     $message = cleanupCodes(str_replace(["“", "”", '１','２','３','４','５','６','７','８','９','０'], ["\"", "\"", '1','2','3','4','5','6','7','8','9','0'], preg_replace("/(\u{200B}|\u{FEFF})/u", "", trim($message))));
@@ -285,7 +299,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
 
     $commands = [
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_ADMIN,
             "match" => "#^\\.quit$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -297,7 +311,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_NONE,
             "match" => "#(http|https):\\/\\/animebytes\\.tv\\/torrent\\/([0-9]+)\\/download\\/(.*)#iu",
             "command" => function($originalSender, $answer, $to, $matches) {
@@ -307,7 +321,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_ADMIN,
             "match" => "#^\\.(scoalesce)[ \t]+(.+?)(| !force)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -366,7 +380,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_ADMIN,
             "match" => "#^\\.(ass)[ \t]+([0-9a-f]{8,32})[ \t]+([^ \t]+)[ \t]*$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -386,7 +400,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_ADMIN,
             "match" => "#^\\.(lrc)[ \t]+([0-9a-f]{8,32})[ \t]+([^ \t]+)[ \t]*(.*)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -411,7 +425,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_ADMIN,
             "match" => "#^\\.(coalesce)[ \t]+([0-9a-f]{8,32})[ \t]+([0-9a-f]{8,32})[ \t]*$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -448,7 +462,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_MOD,
             "match" => "#^\\.(coalesce)[ \t]+([0-9a-f]{8,32})[ \t]*$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -560,7 +574,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(np|nowplaying|now)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -571,7 +585,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(l|listeners|who|listening)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -585,7 +599,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(history|h|played|prev|previous)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -599,7 +613,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(q|queue)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -631,7 +645,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_NONE,
             "match" => "#^\\.(source|code|pr)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -640,7 +654,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_NONE,
             "match" => "#^\\.(help|info|version)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -654,12 +668,12 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                     number_format($stats["total_albums"]) ." albums :: ".number_format($stats["total_artists"]) ." artists :: ".
                     number_format($tStats["ab_groups"]).($tStats["ab_empty_groups"] > 0 ? " (".$tStats["ab_empty_groups"].")" : "")." AB groups, ".
                     number_format($tStats["jps_groups"]).($tStats["jps_empty_groups"] > 0 ? " (".$tStats["jps_empty_groups"].")" : "").
-                    " JPS groups :: ".BOT_USER." version " . substr(trim(file_get_contents(".git/refs/heads/master")), 0, 8), $answer);
+                    " JPS groups :: ".BOT_NICK." version " . substr(trim(file_get_contents(".version")), 0, 8), $answer);
             },
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_ADMIN,
             "match" => "#^\\.createtag[ \t]+\\#([^ \t]+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -685,7 +699,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_MOD,
             "match" => "#^\\.untag[ \t]+\\#([^ \t]+)[ \t]+(.+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -731,7 +745,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
 
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_PUSER,
             "match" => "#^\\.(update|refresh)[ \t]+\\#?([^ \t]+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -796,7 +810,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_MOD,
             "match" => "#^\\.tag[ \t]+\\#([^ \t]+)[ \t]+(.+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -841,7 +855,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(dupes?|duplicates?)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -886,7 +900,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(s|search|req|r|find)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -939,7 +953,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(more|m|expand|continue|advance|panzer vor|motto)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -965,7 +979,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.?(([ \t]*[0-9]+[ \t]*,?)+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -993,7 +1007,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(fetch|stewtime)([ \t]+https?://[^ \t]+|)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1346,7 +1360,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^[\\.!]nana#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1383,7 +1397,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, "#radio", "#animebytes"],
+            "targets" => [BOT_NICK, "#radio", "#animebytes"],
             "permission" => PERMISSION_NONE,
             "match" => "#^[\\.!]dexx$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1432,7 +1446,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL, "#animebytes"],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL, "#animebytes"],
             "permission" => PERMISSION_NONE,
             "match" => "#^[\\.!]dess$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1607,7 +1621,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_SUPERADMIN,
             "match" => "#^\\.raw[ \t]+([^ \t]+)[ \t]+(.+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1618,7 +1632,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_SUPERADMIN,
             "match" => "#^\\.kick[ \t]+([^ \t]+)[ \t]+([^ \t]+)[ \t]+(.*)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1642,7 +1656,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.related$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1670,7 +1684,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(top|rankings?)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1738,7 +1752,7 @@ SQL;
 
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.request[ \t]+(.+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1795,7 +1809,7 @@ SQL;
             },
         ],
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(qrand|qfav)([123]?)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1825,7 +1839,7 @@ SQL;
             }
         ],
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_MOD,
             "match" => "#^\\.(qrand|qfav)([0-9]*)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1848,7 +1862,7 @@ SQL;
             }
         ],
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_ADMIN,
             "match" => "#^\\.(qcache)([0-9]*)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1885,7 +1899,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(associate|register)([ \t]+.*|)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1935,7 +1949,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(nick)[ \t]+([a-z0-9\\-_\\[\\]\\{\\}\\\\`\\|]+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1962,7 +1976,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_SUPERADMIN,
             "match" => "#^\\.(nick)[ \t]+([^ ]+)[ \t]+([^ ]+)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -1994,7 +2008,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(unassociate|unregister)$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2019,7 +2033,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER],
+            "targets" => [BOT_NICK],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.genkey[ \t]+(.+)#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2058,7 +2072,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER],
+            "targets" => [BOT_NICK],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.lskeys?#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2089,7 +2103,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER],
+            "targets" => [BOT_NICK],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(rmkey|delkey)[ \t]+(.+)#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2120,7 +2134,7 @@ SQL;
             }
         ],
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(analyze|report|log|cue|spectrum|spectra|spectrogram|report)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2208,7 +2222,7 @@ SQL;
             }
         ],
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(path|player|get|dl|download|link)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2240,7 +2254,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(artist)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2328,7 +2342,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(album)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2387,7 +2401,7 @@ SQL;
             }
         ],
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(fav|favorite|like|❤️)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2418,7 +2432,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_USER,
             "match" => "#^\\.(unfav|unfavorite|unlike|hate)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2448,7 +2462,7 @@ SQL;
             }
         ],
         [
-            "targets" => [BOT_USER, BOT_RADIO_CHANNEL],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL],
             "permission" => PERMISSION_NONE,
             "match" => "#^\\.+([^ \t\\.]+)([ \t]+(.+)|())$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
@@ -2457,7 +2471,7 @@ SQL;
         ],
     ];
 
-    if($to === BOT_USER){
+    if($to === BOT_NICK){
         $answer = $sender;
     }else{
         $answer = $to;
@@ -2782,10 +2796,15 @@ $lastResultIndex = 0;
 
 $db = new Database(DB_MUSIC_CONNSTRING);
 $torrentIndex = new TorrentIndex(DB_TORRENTS_CONNSTRING);
-$client = new IRCClient($socket, BOT_USER, IRC_SERVER_PASS, [
-    "PRIVMSG NickServ :IDENTIFY ".BOT_USER." " . BOT_PASSWORD,
+define("TEMP_NICK", BOT_USE_SATSUKI ? BOT_NICK : BOT_NICK . "_" . random_int(0, 40));
+$client = new IRCClient($socket, TEMP_NICK, IRC_SERVER_PASS, [
+    "PRIVMSG NickServ :RECOVER ".BOT_NICK." " . BOT_PASSWORD,
     "",
-    "PRIVMSG NickServ :RECOVER ".BOT_USER." " . BOT_PASSWORD,
+    "PRIVMSG NickServ :RELEASE ".BOT_NICK." " . BOT_PASSWORD,
+    "",
+    "NICK " . BOT_NICK,
+    "",
+    "PRIVMSG NickServ :IDENTIFY " . BOT_PASSWORD,
     "",
     "JOIN " . BOT_RADIO_CHANNEL . "," . BOT_NP_CHANNEL,
     "",
