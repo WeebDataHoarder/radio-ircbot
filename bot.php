@@ -1660,26 +1660,7 @@ SQL;
             "permission" => PERMISSION_USER,
             "match" => "#^\\.related$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
-                $json = @json_decode(file_get_contents("/dev/shm/random_topic.json"), true);
-                if(is_array($json) and isset($json["count"])){
-                    sendIRCMessage("Related random: \"".removePing($json["query"])."\" :: " . $json["count"] . " time(s) remaining", $answer);
-                }else{
-                    sendIRCMessage("Related random: Based on history.", $answer);
-                }
-            },
-        ],
-
-        [
-            "targets" => [BOT_RADIO_CHANNEL],
-            "permission" => PERMISSION_PUSER,
-            "match" => "#^\\.related([0-9]+)[ \t]+(.+)$#iu",
-            "command" => function($originalSender, $answer, $to, $matches){
-                @file_put_contents("/dev/shm/random_select.json", "");
-                @file_put_contents("/dev/shm/random_topic.json", json_encode($json = [
-                    "query" => "duration>100 AND duration<800 AND (".$matches[2].") AND -#drama",
-                    "count" => (int) $matches[1]
-                ]));
-                sendIRCMessage("Related random: \"".removePing($json["query"])."\"", $answer);
+                sendIRCMessage("Related random: Based on history.", $answer);
             },
         ],
 
