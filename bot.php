@@ -1397,7 +1397,7 @@ SQL;
         ],
 
         [
-            "targets" => [BOT_NICK, "#radio", "#animebytes"],
+            "targets" => [BOT_NICK, BOT_RADIO_CHANNEL, "#animebytes"],
             "permission" => PERMISSION_NONE,
             "match" => "#^[\\.!]dexx$#iu",
             "command" => function($originalSender, $answer, $to, $matches){
