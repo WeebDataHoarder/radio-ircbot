@@ -2485,14 +2485,14 @@ function getString($str, $start, $end){
 
 function getYoutubeMetadata($ytId){
     $opts = [
-      "http" => [
-          "header" => "Accept-Language: en-US,en;q=1.0\r\n"
-      ]
+        "http" => [
+            "header" => "Accept-Language: en-US,en;q=1.0\r\n"
+        ]
     ];
     $context = stream_context_create($opts);
     $content = file_get_contents("https://www.youtube.com/watch?v=" . $ytId, false, $context);
     $meta = null;
-    if(preg_match('#window\\["ytInitialPlayerResponse"\\] = (.*);$#m', $content, $matches) > 0){
+    if(preg_match('# ytInitialPlayerResponse = (.*?);[$i<]#m', $content, $matches) > 0){
         $json = json_decode($matches[1]);
         $videoTitle = $json->videoDetails->title;
         $shortDescription = $json->videoDetails->shortDescription;
@@ -2578,7 +2578,7 @@ function getYoutubeMetadata($ytId){
             }
         }
     }
-    if(preg_match('#window\\["ytInitialData"\\] = (.*);$#m', $content, $matches) > 0){
+    if(preg_match('# ytInitialData = (.*);[$i<]#m', $content, $matches) > 0){
         $json = json_decode($matches[1], true);
         foreach($json["contents"]["twoColumnWatchNextResults"]["results"]["results"]["contents"] ?? [] as $e){
             if(isset($e["videoSecondaryInfoRenderer"]) and isset($e["videoSecondaryInfoRenderer"]["metadataRowContainer"])){
