@@ -43,7 +43,7 @@ class IRCClient{
                 $cmd = array_shift($line);
                 $sender = "";
                 $senderCloak = "";
-                if($cmd !== "" and $cmd{0} == ":"){
+                if($cmd !== "" and $cmd[0] == ":"){
                     $end = strpos($cmd, "!");
                     if($end === false){
                         $end = strlen($cmd);

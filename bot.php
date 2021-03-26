@@ -114,7 +114,7 @@ function formatTrackName($data, $started = null){
     if(isset($data["play_count"])){
         $title .= " :: " . $data["play_count"] ." play(s) " . FORMAT_RESET;
     }
-    if(isset($data["source"]) and strlen($data["source"]) > 0 and $data["source"]{0} === "@"){
+    if(isset($data["source"]) and strlen($data["source"]) > 0 and $data["source"][0] === "@"){
         $title .= " :: by " . FORMAT_COLOR_YELLOW . removePing($data["source"]) ." " . FORMAT_RESET;
     }
     foreach($data["favored_by"] as $k => $v){
@@ -687,7 +687,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                     return;
                 }
 
-                if($originalSender["permission"] < PERMISSION_SUPERADMIN and preg_match("/^(ab|jps|red|bbt)[tgsa]\\-([0-9]+)$/", $tag, $tagName) > 0){
+                if($originalSender["permission"] < PERMISSION_SUPERADMIN and preg_match("/^(ab|jps|red|bbt)[tgsa]\\-([0-9]+)$/", $tagName) > 0){
                     sendIRCMessage("Tag #". $tagName ." is not allowed", $answer);
                     return;
                 }
@@ -2005,8 +2005,6 @@ SQL;
                     foreach($db->getUserApiKeys($u["name"]) as $key){
                         $db->removeUserApiKey($u["name"], $key);
                     }
-                    unset($meta["identifier"]);
-                    unset($meta["permission"]);
                     $db->setUserMetadata($u["id"], []);
                     sendIRCMessage("Unnasociated " . cleanupCodes($originalSender["id"]) . " from " . cleanupCodes($u["name"]), $answer);
                 }
@@ -2743,7 +2741,7 @@ function sendNginxApiMessage($url, $method = "GET", $postData = null, array $hea
 
 function randomCase($str){
     for($i = 0; $i < strlen($str); ++$i){
-        $str{$i} = (mt_rand(0, 1) == 0 ? strtoupper($str{$i}) : strtolower($str{$i}));
+        $str[$i] = (mt_rand(0, 1) == 0 ? strtoupper($str[$i]) : strtolower($str[$i]));
     }
     return $str;
 }
