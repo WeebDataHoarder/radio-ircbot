@@ -1196,15 +1196,6 @@ JOIN albums ON songs.album = albums.id
 LEFT JOIN favorites ON songs.id = favorites.song
 LEFT JOIN users ON favorites.user_id = users.id
 WHERE (songs.title ILIKE $1 OR artists.name ILIKE $3 OR artists.name ILIKE $4 OR albums.name ILIKE $5) AND songs.duration <= ($2 + 3) AND songs.duration >= ($2 - 3)
-GROUP BY
-    songs.id,
-    songs.hash,
-    songs.title,
-    artists.name,
-    albums.name,
-    songs.path,
-    songs.duration,
-    songs.status
 ;
 SQL;
 
@@ -1231,14 +1222,6 @@ LEFT JOIN favorites ON songs.id = favorites.song
 LEFT JOIN users ON favorites.user_id = users.id
 WHERE (songs.title ILIKE $1 OR artists.name ILIKE $3 OR artists.name ILIKE $4 OR albums.name ILIKE $5 OR (songs.duration <= ($2 + 3) AND songs.duration >= ($2 - 3)))
 GROUP BY
-    songs.id,
-    songs.hash,
-    songs.title,
-    artists.name,
-    albums.name,
-    songs.path,
-    songs.duration,
-    songs.status
 ;
 SQL;
                     $removeChars = [":", "'", "\"", "-", "~", " ", ".", "[", "]", "(", ")", "_", "#", "�", "?", "!", "/", ";", "+", "=", "*"];
