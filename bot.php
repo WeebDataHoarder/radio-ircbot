@@ -327,7 +327,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
             "command" => function($originalSender, $answer, $to, $matches){
                 global $db;
 
-                $results = sendApiMessage("/api/search?limit=5000&orderBy=score&orderDirection=desc&q=" . urlencode($matches[2]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS_INTERNAL."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[2]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                 $totalCoalesced = 0;
                 foreach($results as $t){
                     if($totalCoalesced > 20 and trim($matches[3]) !== "!force"){
@@ -351,7 +351,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                     }
                     $query = "(NOT hash='$hash' AND ((title='$title' AND duration>$durationStart AND duration<$durationEnd AND ((album:'$albumName') OR (artist:'$artistName') OR (duration=".$t["duration"].")) AND (favcount>0 OR playcount>0))$audioHash))";
                     echo "searching for $query\n";
-                    $result = sendApiMessage("/api/search?limit=5000&q=" . urlencode($query), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                    $result = sendApiMessage("/api/search?limit=".LIMIT_RESULTS_INTERNAL."&q=" . urlencode($query), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                     $coalesced = 0;
                     foreach($result as $song){
                         foreach($song["favored_by"] as $user){
@@ -483,7 +483,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                     $audioHash = " OR audio='" . $t["audio_hash"] ."'";
                 }
                 $query = "(NOT hash='$hash' AND ((title='$title' AND duration>$durationStart AND duration<$durationEnd AND ((album:'$albumName') OR (artist:'$artistName') OR (duration=".$t["duration"].")) AND (favcount>0 OR playcount>0))$audioHash))";
-                $result = sendApiMessage("/api/search?limit=5000&q=" . urlencode($query), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                $result = sendApiMessage("/api/search?limit=".LIMIT_RESULTS_INTERNAL."&q=" . urlencode($query), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                 $coalesced = 0;
                 foreach($result as $song){
                     foreach($song["favored_by"] as $user){
@@ -722,11 +722,11 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                 if(isset($np["hash"])){
                     $results = [$np];
                 }else{
-                    $results = sendApiMessage("/api/search?limit=5000&q=" . urlencode($matches[2]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                    $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS_INTERNAL."&q=" . urlencode($matches[2]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                 }
 
-                if(count($results) > 5000){
-                    sendIRCMessage("Too many results! (".count($results)." > 5000)", $answer);
+                if(count($results) > LIMIT_RESULTS_INTERNAL){
+                    sendIRCMessage("Too many results! (".count($results)." > ".LIMIT_RESULTS_INTERNAL.")", $answer);
                     return;
                 }
 
@@ -833,11 +833,11 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                 if(isset($np["hash"])){
                     $results = [$np];
                 }else{
-                    $results = sendApiMessage("/api/search?limit=5000&q=" . urlencode($matches[2]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                    $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS_INTERNAL."&q=" . urlencode($matches[2]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                 }
 
-                if(count($results) > 5000){
-                    sendIRCMessage("Too many results! (".count($results)." > 5000)", $answer);
+                if(count($results) > LIMIT_RESULTS_INTERNAL){
+                    sendIRCMessage("Too many results! (".count($results)." > ".LIMIT_RESULTS_INTERNAL.")", $answer);
                     return;
                 }
 
@@ -878,7 +878,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                         $audioHash = " OR audio='" . $t["audio_hash"] ."'";
                     }
                     $query = "(((title='$title' AND duration>$durationStart AND duration<$durationEnd AND ((album:'$albumName') OR (artist:'$artistName') OR (duration=".$t["duration"].")))$audioHash))";
-                    $results = sendApiMessage("/api/search?limit=5000&orderBy=score&orderDirection=desc&q=" . urlencode($query), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                    $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($query), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
 
                     $lastResult[$originalSender["id"]] = [];
                     foreach($results as $res){
@@ -891,7 +891,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                     }
 
                     if(count($results) > MAX_RESULTS){
-                        sendIRCMessage("... and ". number_format(count($results) - MAX_RESULTS) ." more.", $answer);
+                        sendIRCMessage("... and ". number_format(count($results) - MAX_RESULTS) ." more." . (count($results) === LIMIT_RESULTS ? " Max query limit reached." : ""), $answer);
                     }
                 }else{
                     sendIRCMessage("Could not find track", $answer);
@@ -909,7 +909,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                 if(isset($np["hash"])){
                     $results = [$np];
                 }else{
-                    $results = sendApiMessage("/api/search?limit=5000&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                    $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                 }
                 $lastResult[$originalSender["id"]] = [];
 
@@ -930,7 +930,7 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                     }
 
                     if(count($results) > MAX_RESULTS){
-                        sendIRCMessage("... and ". number_format(count($results) - MAX_RESULTS) ." more.", $answer);
+                        sendIRCMessage("... and ". number_format(count($results) - MAX_RESULTS) ." more." . (count($results) === LIMIT_RESULTS ? " Max query limit reached." : ""), $answer);
                     }
                 }
 
@@ -2099,7 +2099,7 @@ SQL;
                 }else{
                     $np = $db->getTrackByHash($matches[3]);
                     if($np === null){
-                        $results = sendApiMessage("/api/search?limit=5000&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                        $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                         if(count($results) > 1){
                             sendIRCMessage("Found too many results, picking first one.", $answer);
                         }
@@ -2186,7 +2186,7 @@ SQL;
                 }else{
                     $np = $db->getTrackByHash($matches[3]);
                     if($np === null){
-                        $results = sendApiMessage("/api/search?limit=5000&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                        $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                         if(count($results) > 1){
                             sendIRCMessage("Found too many results, picking first one.", $answer);
                         }
@@ -2218,7 +2218,7 @@ SQL;
                 }else{
                     $np = $db->getTrackByHash($matches[3]);
                     if($np === null){
-                        $results = sendApiMessage("/api/search?limit=5000&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                        $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                         if(count($results) > 1){
                             sendIRCMessage("Found too many results, picking first one.", $answer);
                         }
@@ -2306,7 +2306,7 @@ SQL;
                 }else{
                     $np = $db->getTrackByHash($matches[3]);
                     if($np === null){
-                        $results = sendApiMessage("/api/search?limit=5000&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
+                        $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
                         if(count($results) > 1){
                             sendIRCMessage("Found too many results, picking first one.", $answer);
                         }
