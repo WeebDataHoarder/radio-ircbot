@@ -2170,7 +2170,29 @@ SQL;
                                         $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_LIGHT_GREEN . "OK" . FORMAT_RESET;
                                         break;
                                     case \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_INVALID:
-                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_RED . "INVALID" . FORMAT_RESET;
+                                        $contents = file_get_contents($path);
+                                        $logchecker2 = new OrpheusNET\Logchecker\Logchecker();
+                                        $modifiedChecksum = null;
+                                        foreach (["UTF-8", "UTF-16BE", "UTF-16LE", "EUC-JP", "SJIS", "JIS", "BIG-5", "UTF-32BE", "UTF-32LE"] as $encoding){
+                                            $converted = mb_convert_encoding($contents, $encoding);
+                                            if($converted === false){
+                                                continue;
+                                            }
+                                            $n = tempnam("/tmp", "log");
+                                            file_put_contents($n . ".log", $converted); //could use base64 filters, but this allows using external checksum tools
+                                            $logchecker2->newFile($n . ".log");
+                                            $logchecker2->parse();
+                                            unlink($n . ".log");
+                                            if($logchecker2->getChecksumState() === \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_OK){
+                                                $modifiedChecksum = $encoding;
+                                                break;
+                                            }
+                                        }
+                                        if($modifiedChecksum !== null){
+                                            $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_YELLOW . "OK, BAD ENCODING (needs $modifiedChecksum)" . FORMAT_RESET;
+                                        }else{
+                                            $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_RED . "INVALID" . FORMAT_RESET;
+                                        }
                                         break;
                                     case \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_MISSING:
                                         $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_YELLOW . "MISSING" . FORMAT_RESET;
