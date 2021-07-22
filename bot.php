@@ -2162,7 +2162,22 @@ SQL;
                                         $crcMatch .= " Track "  . FORMAT_BOLD ."CRC " . FORMAT_COLOR_LIGHT_GREEN . strtoupper($np["song_metadata"]["audio_crc"]) . FORMAT_RESET . " match :: ";
                                     }
                                 }
-                                sendIRCMessage(strtoupper($matches[1]) . " :: " . FORMAT_ITALIC . $f . FORMAT_RESET . " ::$crcMatch Log score " . FORMAT_BOLD . $logchecker->getScore() . "%" . FORMAT_RESET . " :: Ripped using " . FORMAT_ITALIC . $logchecker->getRipper() . " " . $logchecker->getRipperVersion() . FORMAT_RESET . " :: $url", $answer);
+
+                                $checkSum = "";
+
+                                switch ($logchecker->getChecksumState()){
+                                    case \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_OK:
+                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_LIGHT_GREEN . " OK" . FORMAT_RESET;
+                                        break;
+                                    case \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_INVALID:
+                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_RED . " INVALID" . FORMAT_RESET;
+                                        break;
+                                    case \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_MISSING:
+                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_YELLOW . " MISSING" . FORMAT_RESET;
+                                        break;
+                                }
+
+                                sendIRCMessage(strtoupper($matches[1]) . " :: " . FORMAT_ITALIC . $f . FORMAT_RESET . " ::$crcMatch Log score " . FORMAT_BOLD . $logchecker->getScore() . "%" . FORMAT_RESET . " :: $checkSum :: Ripped using " . FORMAT_ITALIC . $logchecker->getRipper() . " " . $logchecker->getRipperVersion() . FORMAT_RESET . " :: $url", $answer);
                                 foreach (array_chunk($logchecker->getDetails(), 4) as $entries){
                                     sendIRCMessage("LOG :: " . implode(" :: ", $entries), $answer);
                                 }
