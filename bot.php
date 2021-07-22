@@ -2167,13 +2167,13 @@ SQL;
 
                                 switch ($logchecker->getChecksumState()){
                                     case \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_OK:
-                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_LIGHT_GREEN . " OK" . FORMAT_RESET;
+                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_LIGHT_GREEN . "OK" . FORMAT_RESET;
                                         break;
                                     case \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_INVALID:
-                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_RED . " INVALID" . FORMAT_RESET;
+                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_RED . "INVALID" . FORMAT_RESET;
                                         break;
                                     case \OrpheusNET\Logchecker\Check\Checksum::CHECKSUM_MISSING:
-                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_YELLOW . " MISSING" . FORMAT_RESET;
+                                        $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_YELLOW . "MISSING" . FORMAT_RESET;
                                         break;
                                 }
 
