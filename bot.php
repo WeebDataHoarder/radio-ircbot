@@ -2189,7 +2189,7 @@ SQL;
                                             }
                                         }
                                         if($modifiedChecksum !== null){
-                                            $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_YELLOW . "OK, but WRONG ENCODING" . FORMAT_RESET;
+                                            $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_GREEN . "OK". FORMAT_RESET . ", but " . FORMAT_BOLD . FORMAT_COLOR_YELLOW . "WRONG ENCODING" . FORMAT_RESET;
                                         }else{
                                             $checkSum = "Checksum " . FORMAT_BOLD . FORMAT_COLOR_RED . "INVALID" . FORMAT_RESET;
                                         }
