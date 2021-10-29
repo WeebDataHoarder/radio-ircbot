@@ -2112,7 +2112,7 @@ SQL;
                     sendIRCMessage(formatTrackName($np), $answer);
                     sendIRCMessage("Path " . FORMAT_ITALIC . str_replace([
                             DATA_MOUNT_PATH,
-                        ], "", $np["path"]) . FORMAT_RESET . " :: Audio hash ".$np["audio_hash"]." :: Download https://". SITE_HOSTNAME ."/api/download/" .substr($np["hash"], 0, 12) . " :: Other links will be valid for 60 minutes.", $answer);
+                        ], "", $np["path"]) . FORMAT_RESET . " :: Audio hash ".$np["audio_hash"]." :: Player https://". SITE_HOSTNAME ."/player/hash/" .substr($np["hash"], 0, 12) . " :: Other links will be valid for 60 minutes.", $answer);
                     $files = [];
                     $files["Spectrogram"] = getSpectrogram($np["path"]);
                     foreach(scandir(dirname($np["path"])) as $f){
@@ -2236,7 +2236,7 @@ SQL;
                     sendIRCMessage(formatTrackName($np), $answer);
                     sendIRCMessage("Path " . FORMAT_ITALIC . str_replace([
                             DATA_MOUNT_PATH,
-                        ], "", $np["path"]) . FORMAT_RESET . " :: Audio hash ".$np["audio_hash"]." :: Player https://". SITE_HOSTNAME ."/player/hash/" .substr($np["hash"], 0, 12) . " :: DL https://". SITE_HOSTNAME ."/api/download/" .substr($np["hash"], 0, 12), $answer);
+                        ], "", $np["path"]) . FORMAT_RESET . " :: Audio hash ".$np["audio_hash"]." :: Player https://". SITE_HOSTNAME ."/player/hash/" .substr($np["hash"], 0, 12), $answer);
                 }else{
                     sendIRCMessage("Could not find track", $answer);
                 }
