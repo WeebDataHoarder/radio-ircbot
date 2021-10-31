@@ -913,28 +913,30 @@ function handleNewMessage($sender, $senderCloak, $to, $message, $isAction = fals
                 }
                 $lastResult[$originalSender["id"]] = [];
 
-                if(count($results) === 1 and ($matches[1] === "req" or $matches[1] === "r")){
-                    $req = $results[0];
-                    $req = $db->getTrackById($req["id"]);
-                    sendApiMessage("/api/request/" . $req["hash"], "GET", null, ["Authorization: " . ($originalSender["identified"] ? $db->getUserApiKey($originalSender["name"], BOT_KEYID) : DEFAULT_API_KEY)]);
-                    sendIRCMessage("Queued: " . formatTrackName($req), $answer);
-                }else{
-                    foreach($results as $res){
-                        //$res = $db->getTrackById($res["id"]);
-                        $lastResult[$originalSender["id"]][] = $res;
-                        if(count($lastResult[$originalSender["id"]]) >= (MAX_RESULTS + 1)){
-                            continue;
+                if(is_countable($results)){
+                    if(count($results) === 1 and ($matches[1] === "req" or $matches[1] === "r")){
+                        $req = $results[0];
+                        $req = $db->getTrackById($req["id"]);
+                        sendApiMessage("/api/request/" . $req["hash"], "GET", null, ["Authorization: " . ($originalSender["identified"] ? $db->getUserApiKey($originalSender["name"], BOT_KEYID) : DEFAULT_API_KEY)]);
+                        sendIRCMessage("Queued: " . formatTrackName($req), $answer);
+                    }else{
+                        foreach($results as $res){
+                            //$res = $db->getTrackById($res["id"]);
+                            $lastResult[$originalSender["id"]][] = $res;
+                            if(count($lastResult[$originalSender["id"]]) >= (MAX_RESULTS + 1)){
+                                continue;
+                            }
+                            sendIRCMessage(FORMAT_COLOR_YELLOW . FORMAT_UNDERLINE . count($lastResult[$originalSender["id"]]) . FORMAT_RESET .". ". formatTrackName($res), $answer);
+                            $lastResultIndex = count($lastResult[$originalSender["id"]]) - 1;
                         }
-                        sendIRCMessage(FORMAT_COLOR_YELLOW . FORMAT_UNDERLINE . count($lastResult[$originalSender["id"]]) . FORMAT_RESET .". ". formatTrackName($res), $answer);
-                        $lastResultIndex = count($lastResult[$originalSender["id"]]) - 1;
-                    }
 
-                    if(count($results) > MAX_RESULTS){
-                        sendIRCMessage("... and ". number_format(count($results) - MAX_RESULTS) ." more." . (count($results) === LIMIT_RESULTS ? " Max query limit reached." : ""), $answer);
+                        if(count($results) > MAX_RESULTS){
+                            sendIRCMessage("... and ". number_format(count($results) - MAX_RESULTS) ." more." . (count($results) === LIMIT_RESULTS ? " Max query limit reached." : ""), $answer);
+                        }
                     }
                 }
 
-                if(!is_array($results) or count($results) === 0){
+                if(!is_countable($results) or count($results) === 0){
                     if(mt_rand(0, 9) == 0){
                         if(preg_match("/[\u{3000}-\u{303f}\u{3040}-\u{309f}\u{30a0}-\u{30ff}\u{ff00}-\u{ff9f}\u{4e00}-\u{9faf}\u{3400}-\u{4dbf}]/u", $matches[3]) > 0){
                             sendIRCMessage("No results. " . FORMAT_ITALIC . randomCase("Did you try searching in Romaji?"), $answer);
@@ -2100,11 +2102,13 @@ SQL;
                     $np = $db->getTrackByHash($matches[3]);
                     if($np === null){
                         $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
-                        if(count($results) > 1){
-                            sendIRCMessage("Found too many results, picking first one.", $answer);
-                        }
-                        if(count($results) > 0){
-                            $np = array_shift($results);
+                        if(is_countable($results)) {
+                            if (count($results) > 1) {
+                                sendIRCMessage("Found too many results, picking first one.", $answer);
+                            }
+                            if (count($results) > 0) {
+                                $np = array_shift($results);
+                            }
                         }
                     }
                 }
@@ -2224,11 +2228,13 @@ SQL;
                     $np = $db->getTrackByHash($matches[3]);
                     if($np === null){
                         $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
-                        if(count($results) > 1){
-                            sendIRCMessage("Found too many results, picking first one.", $answer);
-                        }
-                        if(count($results) > 0){
-                            $np = array_shift($results);
+                        if(is_countable($results)) {
+                            if (count($results) > 1) {
+                                sendIRCMessage("Found too many results, picking first one.", $answer);
+                            }
+                            if (count($results) > 0) {
+                                $np = array_shift($results);
+                            }
                         }
                     }
                 }
@@ -2256,11 +2262,13 @@ SQL;
                     $np = $db->getTrackByHash($matches[3]);
                     if($np === null){
                         $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
-                        if(count($results) > 1){
-                            sendIRCMessage("Found too many results, picking first one.", $answer);
-                        }
-                        if(count($results) > 0){
-                            $np = array_shift($results);
+                        if(is_countable($results)) {
+                            if (count($results) > 1) {
+                                sendIRCMessage("Found too many results, picking first one.", $answer);
+                            }
+                            if (count($results) > 0) {
+                                $np = array_shift($results);
+                            }
                         }
                     }
                 }
@@ -2344,11 +2352,13 @@ SQL;
                     $np = $db->getTrackByHash($matches[3]);
                     if($np === null){
                         $results = sendApiMessage("/api/search?limit=".LIMIT_RESULTS."&orderBy=score&orderDirection=desc&q=" . urlencode($matches[3]), "GET", null, ["Authorization: " . DEFAULT_API_KEY]);
-                        if(count($results) > 1){
-                            sendIRCMessage("Found too many results, picking first one.", $answer);
-                        }
-                        if(count($results) > 0){
-                            $np = array_shift($results);
+                        if(is_countable($results)) {
+                            if (count($results) > 1) {
+                                sendIRCMessage("Found too many results, picking first one.", $answer);
+                            }
+                            if (count($results) > 0) {
+                                $np = array_shift($results);
+                            }
                         }
                     }
                 }
